@@ -7,6 +7,7 @@ interface Item {
   id: number
   type: string
   title: string
+  description: string
   created_at: string
 }
 
@@ -48,6 +49,7 @@ function App() {
     if (!trimmed) return
     localStorage.setItem(STORAGE_KEY, trimmed)
     setToken(trimmed)
+    setDraft('')
   }
 
   function handleDisconnect() {
@@ -58,6 +60,10 @@ function App() {
     setError(null)
   }
 
+  function formatDate(dateString: string) {
+    return new Date(dateString).toLocaleString()
+  }
+
   if (!token) {
     return (
       <form className="token-form" onSubmit={handleConnect}>
@@ -65,44 +71,72 @@ function App() {
         <p>Enter your API token to connect.</p>
         <input
           type="password"
-          placeholder="Token"
+          placeholder="Enter your token"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
+          autoFocus
         />
-        <button type="submit">Connect</button>
+        <button type="submit" disabled={!draft.trim()}>
+          Connect
+        </button>
       </form>
     )
   }
 
   return (
-    <div>
+    <div className="app-container">
       <header className="app-header">
         <h1>Items</h1>
-        <button className="btn-disconnect" onClick={handleDisconnect}>
-          Disconnect
-        </button>
+        <div className="header-controls">
+          <span className="items-count">Total: {items.length}</span>
+          <button className="btn-disconnect" onClick={handleDisconnect}>
+            Disconnect
+          </button>
+        </div>
       </header>
 
-      {loading && <p>Loading...</p>}
-      {error && <p>Error: {error}</p>}
+      {loading && (
+        <div className="loading-container">
+          <p>Loading items...</p>
+        </div>
+      )}
+      
+      {error && (
+        <div className="error-container">
+          <p>Error: {error}</p>
+          <button onClick={() => window.location.reload()}>Try Again</button>
+        </div>
+      )}
 
-      {!loading && !error && (
-        <table>
+      {!loading && !error && items.length === 0 && (
+        <div className="empty-state">
+          <p>No items found</p>
+        </div>
+      )}
+
+      {!loading && !error && items.length > 0 && (
+        <table className="items-table">
           <thead>
             <tr>
               <th>ID</th>
               <th>Type</th>
               <th>Title</th>
-              <th>Created at</th>
+              <th>Description</th>
+              <th>Created At</th>
             </tr>
           </thead>
           <tbody>
             {items.map((item) => (
               <tr key={item.id}>
                 <td>{item.id}</td>
-                <td>{item.type}</td>
+                <td>
+                  <span className={`item-type type-${item.type.toLowerCase()}`}>
+                    {item.type}
+                  </span>
+                </td>
                 <td>{item.title}</td>
-                <td>{item.created_at}</td>
+                <td>{item.description}</td>
+                <td>{formatDate(item.created_at)}</td>
               </tr>
             ))}
           </tbody>
